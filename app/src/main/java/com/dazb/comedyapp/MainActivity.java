@@ -32,16 +32,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        new RetrieveDataTask().execute();
+        new TicketmasterGetEventsTask().execute();
     }
 
     /**
-     * AsyncTask that handles the retrieving of events
+     * AsyncTask that handles the retrieving of events from Ticketmaster API
      * Params: ApiKey
      * Progress: Void
      * Result: List of events
      */
-    class RetrieveDataTask extends AsyncTask<Void, Void, PagedResponse<Events>> {
+    class TicketmasterGetEventsTask extends AsyncTask<Void, Void, PagedResponse<Events>> {
         @Override
         protected PagedResponse<Events> doInBackground(Void... params) {
             // 1. Instantiate a DiscoveryApi client:
@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
                 response =
                         discoveryApi.searchEvents(new SearchEventsOperation().latlong(LAT, LONG) // Adding a location filter
                                 .pageSize(50) // Asking for a maximum of 50 events per pages
-                                // TODO: way to add filter for just comedy? Cos else we have to filter through response, which isn't ideal
+                                // TODO: way to add filter for just comedy? Cos else we have to filter through response, which isn't ideal, since suppose response don't have comedy, we get no results on UI
                         );
             } catch (Exception e) {
                 Log.d(TAG, "RetrieveDataTask, PagedResponse Error: ", e);
@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
 
         /**
          * Once we get a response from our search, update the UI with the results
-         * @param response
+         * @param response events returned from doInBackground
          */
         @Override
         protected void onPostExecute(PagedResponse<Events> response) {
@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
             // Go through every event returned
             for(com.ticketmaster.discovery.model.Event event : response.getContent().getEvents()) {
                 // If event classified as comedy, update UI with the event name
+                // TODO: as discussed above, not ideal. Really we want only comedy events returned from Ticketmaster, not any old event
                 if (event.getClassifications().get(0).getGenre().getName().toLowerCase().contains("comedy")) {
                     events.append(event.getName() + "\r\n");
                 }

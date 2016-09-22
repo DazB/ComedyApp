@@ -1,0 +1,11 @@
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://www.github.com/Ents24/ents24-api-client.git"
+        }
+    ],
+    "require": {
+        "Ents24/ents24-api-client": "dev-master"
+    }
+}
