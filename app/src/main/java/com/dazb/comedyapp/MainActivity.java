@@ -82,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
                     events.append(event.getName() + "\r\n");
                 }
             }
-            events.append("END"); //test git
         }
     }
 }
