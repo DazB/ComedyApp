@@ -17,6 +17,7 @@ import com.ticketmaster.discovery.model.Date.Start;
 import com.ticketmaster.discovery.model.Event;
 import com.ticketmaster.discovery.model.Events;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -25,6 +26,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Iterator;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -39,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private static String entsClientSecret = "bfd40f1dcb565e9a0e206395c7ae7c6f108cd26a";
     private static String entsUsername = "dazbahri@hotmail.co.uk";
     private static String entsPassword = "ShitPissFuckCunt";
-    private String entsToken;
+    private String entsToken = "";
 
 
     // Instantiate a DiscoveryApi client:
@@ -53,6 +55,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        TextView events = (TextView)findViewById(R.id.textView);
+        events.setMovementMethod(new ScrollingMovementMethod()); // Make shit scroll
 
         new EntsGetEventsTask().execute();
         new TicketmasterGetEventsTask().execute();
@@ -94,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(PagedResponse<Events> response) {
             TextView events = (TextView)findViewById(R.id.textView);
-            events.setMovementMethod(new ScrollingMovementMethod()); // Make shit scroll
 
             if (response != null) {
                 // Go through every event returned
@@ -115,11 +119,12 @@ public class MainActivity extends AppCompatActivity {
      * Progress: Void
      * Result: Void
      */
-    class EntsGetEventsTask extends AsyncTask<Void, Void, Void> {
+    class EntsGetEventsTask extends AsyncTask<Void, Void, StringBuilder> {
 
         @Override
-        protected Void doInBackground(Void... params) {
+        protected StringBuilder doInBackground(Void... params) {
             try {
+
                 // Create connection
                 HttpURLConnection entsConnection = (HttpURLConnection) new URL("https://api.ents24.com/auth/login").openConnection();
                 entsConnection.setRequestMethod("POST");
@@ -137,7 +142,8 @@ public class MainActivity extends AppCompatActivity {
                 //Get Response
                 int statusCode = entsConnection.getResponseCode();
                 StringBuilder response = new StringBuilder();
-                // Check request codes for Bad request
+
+                // Check request codes
                 if (statusCode >= 200 && statusCode < 400) {
                     // Good request
                     InputStream is = entsConnection.getInputStream();
@@ -178,7 +184,81 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "ENTS24 connection error: ", e);
             }
 
+            // If we have an auth token, start to request events and shit
+            if (!entsToken.equals("")) {
+                try {
+                    // Create connection to get comedy in a 10 mile radius of york from 25th Sept 2016 until 25th Sept 2017, using auth token from previous connection
+                    HttpURLConnection eventConnection = (HttpURLConnection) new URL("https://api.ents24.com/" +
+                            "event/list?location=geo:53.9576300,-1.0827100&radius_distance=10&distance_unit=mi&genre=comedy&date_from=2016-09-25&date_to=2017-09-25&results_per_page=50&incl_artists=1&full_description=1").openConnection();
+                    eventConnection.setRequestMethod("GET");
+                    eventConnection.setRequestProperty("Authorization",
+                            entsToken);
+                    eventConnection.setUseCaches(false);
+
+                    //Get Response
+                    int statusCode = eventConnection.getResponseCode();
+                    StringBuilder response = new StringBuilder();
+
+                    // Check request codes
+                    if (statusCode >= 200 && statusCode < 400) {
+                        // Good request
+                        InputStream is = eventConnection.getInputStream();
+                        BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+                        String line;
+                        while ((line = rd.readLine()) != null) {
+                            response.append(line);
+                            response.append('\r');
+                        }
+                        rd.close();
+
+                        return response;
+
+                    }
+                    else {
+                        // Bad request
+                        InputStream is = eventConnection.getErrorStream();
+                        BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+                        String line;
+                        while ((line = rd.readLine()) != null) {
+                            response.append(line);
+                            response.append('\r');
+                        }
+                        rd.close();
+                    }
+
+                    Log.d(TAG, response.toString());
+
+                }
+                catch (Exception e) {
+                    Log.d(TAG, "Ents24 connection error: ", e);
+                }
+            }
+
             return null;
+        }
+
+        /**
+         * Once we get a response from Ents, update the UI with the results
+         * @param response events returned from doInBackground
+         */
+        @Override
+        protected void onPostExecute(StringBuilder response) {
+            TextView events = (TextView)findViewById(R.id.textView);
+
+            try {
+                // Update UI with event names
+                JSONArray responseJSONArray = new JSONArray(response.toString());
+
+                for (int i = 0; i < responseJSONArray.length(); i++) {
+                    JSONObject eventJSON = responseJSONArray.getJSONObject(i);
+                    events.append(eventJSON.getString("headline") + " - " + eventJSON.getString("title") + "\r\n");
+
+                }
+            }
+            catch (Exception e) {
+                Log.d(TAG, "Ents24 update UI: ", e);
+
+            }
         }
 
     }
