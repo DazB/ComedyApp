@@ -189,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     // Create connection to get comedy in a 10 mile radius of york from 25th Sept 2016 until 25th Sept 2017, using auth token from previous connection
                     HttpURLConnection eventConnection = (HttpURLConnection) new URL("https://api.ents24.com/" +
-                            "event/list?location=geo:53.9576300,-1.0827100&radius_distance=10&distance_unit=mi&genre=comedy&date_from=2016-09-25&date_to=2017-09-25&results_per_page=50&incl_artists=1&full_description=1").openConnection();
+                            "event/list?location=geo:53.9576300,-1.0827100&radius_distance=10&distance_unit=mi&genre=comedy&date_from=2016-10-25&date_to=2017-09-25&results_per_page=50&incl_artists=1&full_description=1").openConnection();
                     eventConnection.setRequestMethod("GET");
                     eventConnection.setRequestProperty("Authorization",
                             entsToken);
