@@ -19,13 +19,16 @@ class Handler(asyncore.dispatcher):
         username = 'dazbahri@hotmail.co.uk'
         password = 'ShitPissFuckCunt'
 
+        ticketmaster_api_key = 'xoGWGgRDOLHGsutqGIk0YLGaNXaYhsAA'
+
         # TODO: general exception handling. Check status codes (r.status_code), act appropriately.
 
         r = requests.post('https://api.ents24.com/auth/login', data={'client_id': client_id,
                                                                      'client_secret': client_secret,
                                                                      'username': username,
                                                                      'password': password})
-        # TODO: timeouts?
+        # TODO: timeouts for requests?
+        # http://docs.python-requests.org/en/master/user/quickstart/#timeouts
 
         # Get auth token to make requests
         r_json = json.loads(r.text)
@@ -34,14 +37,34 @@ class Handler(asyncore.dispatcher):
         headers = {'Authorization': access_token}
 
         # TODO: format url so custom request using parameters sent by client
+        # Send url to ent24 api
         url = 'https://api.ents24.com/event/list?location=geo:53.9576300,-1.0827100&radius_distance=10&' \
               'distance_unit=mi&genre=comedy&date_from=2016-12-03&date_to=2017-09-25&results_per_page=50&' \
               'incl_artists=1&full_description=1'
 
         r = requests.get(url, headers=headers)
 
-        # TODO: send all data in standardised format
-        self.send(r.text)
+        comedy_events = r.text.encode('utf-8')
+
+        print comedy_events
+
+        self.send(comedy_events)
+
+        # TODO: format url so custom request using parameters sent by client
+        # Send url to ticketmaster api with parameters
+        url = 'https://app.ticketmaster.com/discovery/v2/events.json?latlong=53.9600%2C-1.0873&radius=10&' \
+              'classificationName=comedy'
+
+        # Add api key
+        url += '&apikey=' + ticketmaster_api_key
+
+        r = requests.get(url)
+
+        comedy_events = r.text.encode('utf-8')
+
+        self.send(comedy_events)
+
+        # TODO: send all data in standardised format. Send separately or all at once?
         self.close()
 
 
