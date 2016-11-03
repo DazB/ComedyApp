@@ -43,10 +43,7 @@ class Handler(asyncore.dispatcher):
               'incl_artists=1&full_description=1'
 
         r = requests.get(url, headers=headers)
-
         comedy_events = r.text.encode('utf-8')
-
-        print comedy_events
 
         self.send(comedy_events)
 
@@ -59,7 +56,6 @@ class Handler(asyncore.dispatcher):
         url += '&apikey=' + ticketmaster_api_key
 
         r = requests.get(url)
-
         comedy_events = r.text.encode('utf-8')
 
         self.send(comedy_events)
@@ -90,6 +86,7 @@ class Server(asyncore.dispatcher):
             handler = Handler(sock)
 
 
-server = Server('localhost', 8080)
+print "starting server"
+server = Server('', 8000)
 asyncore.loop()
 print "done"
